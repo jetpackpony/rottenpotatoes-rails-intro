@@ -11,17 +11,29 @@ class MoviesController < ApplicationController
   end
 
   def index
-    params[:sort] = "" unless Movie.sort_values.include? params[:sort]
+    @all_ratings = Movie.rating_values
 
-    if params[:ratings] != nil
-      @ratings = params[:ratings].select do |r, v| Movie.rating_values.include? r end.keys
-    else
-      @ratings = Movie.rating_values
+    # Cleanup sort filter data
+    @sort = params[:sort] || session[:sort]
+    @sort = "" unless Movie.sort_values.include? @sort
+
+    # Cleanup ratings filter data
+    @ratings = params[:ratings] || session[:ratings] || Hash[ @all_ratings.collect do |el| [el, 1] end ]
+    @ratings.select! do |r, v| @all_ratings.include? r end unless @ratings != nil
+
+    # If params are different from the URL, redirect
+    if @sort != params[:sort] || @ratings != params[:ratings]
+      flash.keep
+      redirect_to movies_path sort: @sort, ratings: @ratings
     end
 
-    @all_ratings = Movie.rating_values
-    @movies = Movie.order params[:sort]
-    @movies = @movies.where rating: @ratings
+    # Save params to session
+    session[:sort] = @sort
+    session[:ratings] = @ratings
+
+    # Go grab movies
+    @movies = Movie.order @sort
+    @movies = @movies.where rating: @ratings.keys
   end
 
   def new
