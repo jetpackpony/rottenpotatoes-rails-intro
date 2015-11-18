@@ -11,10 +11,17 @@ class MoviesController < ApplicationController
   end
 
   def index
-    allowed_sort_values = ["title", "release_date"]
+    params[:sort] = "" unless Movie.sort_values.include? params[:sort]
 
-    params[:sort] = "" unless allowed_sort_values.include? params[:sort]
+    if params[:ratings] != nil
+      @ratings = params[:ratings].select do |r, v| Movie.rating_values.include? r end.keys
+    else
+      @ratings = Movie.rating_values
+    end
+
+    @all_ratings = Movie.rating_values
     @movies = Movie.order params[:sort]
+    @movies = @movies.where rating: @ratings
   end
 
   def new
