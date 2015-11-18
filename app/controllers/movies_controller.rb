@@ -11,7 +11,10 @@ class MoviesController < ApplicationController
   end
 
   def index
-    @movies = Movie.all
+    allowed_sort_values = ["title", "release_date"]
+
+    params[:sort] = "" unless allowed_sort_values.include? params[:sort]
+    @movies = Movie.order params[:sort]
   end
 
   def new
